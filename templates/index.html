@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bornedex Fast Upload</title>
+</head>
+<body>
+    
+
+    <script>
+        navigator.geolocation.getCurrentPosition(function(position) {
+            // Get the latitude and longitude
+            var latitude = position.coords.latitude;
+            var longitude = position.coords.longitude;
+
+            // Access the device camera
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(stream) {
+                    // Create a video element to display the camera stream
+                    var video = document.createElement('video');
+                    video.srcObject = stream;
+                    video.autoplay = true;
+
+                    // Append the video element to the body
+                    document.body.appendChild(video);
+
+                    var button = document.createElement('button');
+                    button.textContent = 'Take a picture';
+
+                    document.body.appendChild(button);
+
+                    // Take a picture when the video stream is ready
+                    video.addEventListener('loadedmetadata', function() {
+                        // Create a canvas element
+                        var canvas = document.createElement('canvas');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        document.body.appendChild(canvas);
+
+                        // Add event listener to the button
+                        button.addEventListener('click', function() {
+                            // Draw the current frame of the video onto the canvas
+                            var context = canvas.getContext('2d');
+                            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            // Get the image data from the canvas
+                            var imageData = canvas.toDataURL('image/png');
+                            // Do something with the image data
+                            console.log('Image data:', imageData);
+                            alert('Resolution: ' + canvas.width + 'x' + canvas.height + '\nLatitude: ' + latitude + '\nLongitude: ' + longitude);
+
+
+                            // Send the image data and the location to the server
+                            fetch('/upload', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    image: imageData,
+                                    lat: latitude,
+                                    lon: longitude
+                                })
+                            })
+                        });
+                    });
+                })
+                .catch(function(error) {
+                    console.error('Error accessing the camera:', error);
+                });
+        });
+
+    </script>
+</body>
+</html>
